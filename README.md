@@ -1,1 +1,81 @@
 # Accidents_of_Toronto_From-_2015_to_2018
+---
+title: "Project1"
+author: "Dhruv Sojitra"
+date: "202-10-28"
+output: pdf_document
+---
+
+## Importing Datasets
+
+```{r}
+data2015 <- read.csv("2015_KSI.csv")
+data2016 <- read.csv("2016_KSI.csv")
+data2017 <- read.csv("2017_KSI.csv")
+data2018 <- read.csv("2018_KSI.csv")
+```
+
+## Merging all datasets in one
+
+0.  Viewing Column Names
+
+```{r}
+colnames(data2015)
+```
+
+1.  Getting all column names same.
+
+```{r}
+colnames(data2016) <- colnames(data2015)
+colnames(data2017) <- colnames(data2015)
+colnames(data2018) <- colnames(data2015)
+```
+
+2.  Merging all data sets
+
+```{r}
+dataMerged <- rbind(data2015,data2016)
+dataMerged <- rbind(dataMerged,data2017)
+dataMerged <- rbind(dataMerged,data2018)
+```
+
+3.  Viewing Data
+
+```{r}
+str(dataMerged)
+```
+
+## Creating sub table for Question 1
+
+```{r}
+dataset_for_fatality <- data.frame(dataMerged$YEAR, dataMerged$VEHICLES_IN_STREET, dataMerged$DISTRICT, dataMerged$NEIGHBOURHOOD, dataMerged$FATAL_NO)
+colnames(dataset_for_fatality) <- c("YEAR", "VEHICLES_IN_STREET", "DISTRICT", "NEIGHBOURHOOD", "FATAL_NO")
+```
+
+## Generating Table for Fatalities in last 4 Years in each Neighbourhood of Toronto.
+
+Here we have used library "SQLDF" which allows us to use sql like queries to interpret our dataframe. We have used GROUP BY clause to group the neighbourhood and SUM aggregate function to add all the fatalities in that neighbourhood
+
+```{r}
+library(sqldf)
+datares <- sqldf('SELECT DISTRICT, NEIGHBOURHOOD, sum(FATAL_NO) AS "Fatalities" FROM dataset_for_fatality WHERE DISTRICT LIKE "Toronto%" GROUP BY NEIGHBOURHOOD')
+head(datares,15)
+```
+
+Moving on to Question 2 ... 
+## Generating Table for total vehicles in the street for each district for the last 4 years during the accidents.
+
+```{r}
+datares2 <- sqldf('SELECT DISTRICT, sum(VEHICLES_IN_STREET) AS "Vehicles in Street" FROM dataset_for_fatality WHERE DISTRICT NOT LIKE "<Null>" GROUP BY DISTRICT')
+show(datares2)
+```
+
+Above we have the result of the sum of all vehicles in street during an accident since last 4 years in each District.
+
+Moving on to Question 3... 
+## Generating the table for Top 5 neighbourhoods with the highest average number of vehicles in the streets.
+
+```{r}
+datares3 <- sqldf('SELECT NEIGHBOURHOOD, avg(VEHICLES_IN_STREET) AS "Vehicles in Street" FROM dataset_for_fatality GROUP BY NEIGHBOURHOOD ORDER BY VEHICLES_IN_STREET DESC LIMIT 5')
+show(datares3)
+```
